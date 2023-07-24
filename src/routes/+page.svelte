@@ -28,7 +28,7 @@
 
 <main class="main">
 	{#if $currentUser}
-		<p>Signed in as {$currentUser.username}</p>
+		<p>Signed in as {$currentUser.user?.username}</p>
 		<button on:click={logout}>Sign out</button>
 	{:else if mode === 'login'}
 		<form on:submit|preventDefault class="grid">

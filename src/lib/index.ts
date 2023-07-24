@@ -1,11 +1,22 @@
-import type { NewUser } from './types/user';
+import type { User, NewUser, CurrentUser } from './types/user';
 import PocketBase from 'pocketbase';
+import type { Record } from 'pocketbase';
 import { writable } from 'svelte/store';
 import { validate } from './helpers';
+import { userMapper } from './user-mapper';
 
 export const pb = new PocketBase('http://127.0.0.1:8090');
 
-export const currentUser = writable(pb.authStore.model);
+const initialiseCurrentUser = () => {
+	let user: User | null = null;
+	if (pb.authStore.model) user = userMapper(pb.authStore.model as Record);
+	return {
+		user: user,
+		auth: pb.authStore.model
+	};
+};
+
+export const currentUser = writable<CurrentUser | null>(initialiseCurrentUser());
 
 export async function createUser(newUser: NewUser) {
 	const isValid = validate(newUser);
@@ -47,6 +58,10 @@ export async function logout() {
 export function registerListener() {
 	pb.authStore.onChange(() => {
 		if (pb.authStore.model == null) return;
-		currentUser.set(pb.authStore.model);
+		const user = userMapper(pb.authStore.model as Record);
+		currentUser.set({
+			user,
+			auth: pb.authStore.model
+		});
 	});
 }
